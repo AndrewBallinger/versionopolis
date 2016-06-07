@@ -25,7 +25,7 @@ main = do
      putStrLn "Usage: versionopolis <configuration.yaml>"
   else do
      let [configArg] = args
-     config <- parseConfiguration (configArg)
+     config <- parseConfiguration configArg
      case config of
        Left e -> print e
        Right c -> do
@@ -33,23 +33,23 @@ main = do
          Control.Monad.when existence $ removeDirectoryRecursive "build"
          createDirectory "build"
          do
-           putStrLn ("Building html files")
+           putStrLn "Building HTML files"
            doHtmlFile c
-           putStrLn ("Building static files")
-           doStatic c
+           putStrLn "Building static files"
+           doStatic 
            return ()
 
 parseConfiguration :: String -> IO (Either ParseException [HashMap String String])
 parseConfiguration = Y.decodeFileEither
 
-doStatic :: [HashMap String String] -> IO ()
-doStatic configuration = do
+doStatic :: IO ()
+doStatic = do
   existence <- doesDirectoryExist "static"
-  Control.Monad.when existence $ sequence_ $ copyStaticForBuild <$> ((! "key") <$> configuration)
+  Control.Monad.when existence copyStaticForBuild
   return ()
 
-copyStaticForBuild :: String -> IO ()
-copyStaticForBuild build = do
+copyStaticForBuild :: IO ()
+copyStaticForBuild = do
   dir <- getDirectory "static"
   copyTo_ "build/static" dir
   return ()
@@ -57,9 +57,7 @@ copyStaticForBuild build = do
 doHtmlFile :: [HashMap String String] -> IO ()
 doHtmlFile configuration =
   let doc = readDocument [withValidate no, withWarnings no, withTrace 0, withParseHTML yes] "index.html" in
-  do
-    sequence_ (runX <$> (constructVersion doc <$> configuration))
-    return ()
+  sequence_ (runX <$> (constructVersion doc <$> configuration)) 
 
 constructVersion :: IOSArrow XmlTree XmlTree -> HashMap String String -> IOSArrow XmlTree XmlTree
 constructVersion doc version = traceMsg 1 ("Trying to process " ++ version ! "key")
