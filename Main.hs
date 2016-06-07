@@ -36,7 +36,7 @@ main = do
          createDirectory "build"
          makeVersionDirectories c >> do
            putStrLn ("Building html files")
-           doHtmlFile c (htmlArg)
+           doHtmlFile c htmlArg
            putStrLn ("Building css files")
            doStatic c
            return ()
@@ -63,19 +63,23 @@ doHtmlFile :: [HashMap String String] -> String -> IO ()
 doHtmlFile configuration htmlFile =
   let doc = readDocument [withValidate no, withWarnings no, withTrace 0, withParseHTML yes] htmlFile in
   do
-    sequence_ (runX <$> (constructVersion doc <$> configuration))
+    sequence_ (runX <$> (constructVersion doc htmlFile <$> configuration))
     return ()
 
+constructVersion :: IOSArrow XmlTree XmlTree -> String -> HashMap String String -> IOSArrow XmlTree XmlTree
+constructVersion doc filename version = traceMsg 1 ("Trying to process " ++ version ! "key")
+  >>> foldl (>>>) doc (processTopDown <$> changesForVersion version)
+  >>> writeDocument [withOutputHTML] ("build/" ++ (version ! "key") ++ filename)
+  >>> traceMsg 1 ("Wrote " ++ (version ! "key"))
+
+updateVersionWithKey :: HashMap String String -> String -> IOSArrow XmlTree XmlTree
 updateVersionWithKey version key = traceMsg 1 ("Looking at " ++ key)
   >>> replaceWithText (version ! key)
   `Text.XML.HXT.Core.when` hasId key
-  >>> traceMsg 1 ("I think I did " ++ key)
+  >>> traceMsg 1 ("Made a change for " ++ key)
 
+changesForVersion :: HashMap String String -> [IOSArrow XmlTree XmlTree]
 changesForVersion version = updateVersionWithKey version <$> keys version
-
-
-constructVersion doc version = traceMsg 1 ("Trying to process " ++ version ! "key") >>> foldl (>>>) doc (processTopDown <$> changesForVersion version)
-  >>> writeDocument [withOutputHTML] ("build/" ++ (version ! "key") ++ "/index.html") >>> traceMsg 1 ("I think I wrote " ++ (version ! "key"))
 
 hasId :: ArrowXml a => String -> a XmlTree XmlTree
 hasId key =  hasAttr "id" >>> hasAttrValue "id" (== key)
