@@ -13,7 +13,10 @@ maintainer:          andrewballinger@statisopt.com
 category:            Utils
 build-type:          Simple
 cabal-version:       >=1.10
-source-repository:   http://github.com/AndrewBallinger/versionopolis                    
+                     
+source-repository head
+  type: git 
+  location: http://github.com/AndrewBallinger/versionopolis                    
                      
 executable versionopolis
   main-is:             Main.hs
