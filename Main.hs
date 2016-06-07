@@ -21,10 +21,10 @@ instance FromJSON Version
 main :: IO ()
 main = do
   args <- getArgs
-  if length args /= 2 then
+  if length args /= 1 then
      putStrLn "Usage: versionopolis <configuration.yaml>"
   else do
-     let [configArg, htmlArg] = args
+     let [configArg] = args
      config <- parseConfiguration (configArg)
      case config of
        Left e -> print e
@@ -34,7 +34,7 @@ main = do
          createDirectory "build"
          do
            putStrLn ("Building html files")
-           doHtmlFile c htmlArg
+           doHtmlFile c
            putStrLn ("Building static files")
            doStatic c
            return ()
@@ -54,15 +54,15 @@ copyStaticForBuild build = do
   copyTo_ "build/static" dir
   return ()
 
-doHtmlFile :: [HashMap String String] -> String -> IO ()
-doHtmlFile configuration htmlFile =
-  let doc = readDocument [withValidate no, withWarnings no, withTrace 0, withParseHTML yes] htmlFile in
+doHtmlFile :: [HashMap String String] -> IO ()
+doHtmlFile configuration =
+  let doc = readDocument [withValidate no, withWarnings no, withTrace 0, withParseHTML yes] "index.html" in
   do
-    sequence_ (runX <$> (constructVersion doc htmlFile <$> configuration))
+    sequence_ (runX <$> (constructVersion doc <$> configuration))
     return ()
 
-constructVersion :: IOSArrow XmlTree XmlTree -> String -> HashMap String String -> IOSArrow XmlTree XmlTree
-constructVersion doc filename version = traceMsg 1 ("Trying to process " ++ version ! "key")
+constructVersion :: IOSArrow XmlTree XmlTree -> HashMap String String -> IOSArrow XmlTree XmlTree
+constructVersion doc version = traceMsg 1 ("Trying to process " ++ version ! "key")
   >>> foldl (>>>) doc (processTopDown <$> changesForVersion version)
   >>> writeDocument [withOutputHTML] ("build/" ++ (version ! "key") ++ ".html")
   >>> traceMsg 1 ("Wrote " ++ (version ! "key"))
