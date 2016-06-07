@@ -64,7 +64,7 @@ doHtmlFile configuration =
 constructVersion :: IOSArrow XmlTree XmlTree -> HashMap String String -> IOSArrow XmlTree XmlTree
 constructVersion doc version = traceMsg 1 ("Trying to process " ++ version ! "key")
   >>> foldl (>>>) doc (processTopDown <$> changesForVersion version)
-  >>> writeDocument [withOutputHTML] ("build/" ++ (version ! "key") ++ ".html")
+  >>> writeDocument [withOutputHTML] ("build/" ++ (version ! "key"))
   >>> traceMsg 1 ("Wrote " ++ (version ! "key"))
 
 updateVersionWithKey :: HashMap String String -> String -> IOSArrow XmlTree XmlTree
