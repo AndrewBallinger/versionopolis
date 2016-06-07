@@ -22,7 +22,7 @@ main :: IO ()
 main = do
   args <- getArgs
   if length args /= 2 then
-     putStrLn "Usage: versionopolis <configuration.yaml> <target.html>"
+     putStrLn "Usage: versionopolis <configuration.yaml>"
   else do
      let [configArg, htmlArg] = args
      config <- parseConfiguration (configArg)
@@ -32,7 +32,7 @@ main = do
          existence <- doesDirectoryExist "build"
          Control.Monad.when existence $ removeDirectoryRecursive "build"
          createDirectory "build"
-         makeVersionDirectories c >> do
+         do
            putStrLn ("Building html files")
            doHtmlFile c htmlArg
            putStrLn ("Building static files")
@@ -41,9 +41,6 @@ main = do
 
 parseConfiguration :: String -> IO (Either ParseException [HashMap String String])
 parseConfiguration = Y.decodeFileEither
-
-makeVersionDirectories :: [HashMap String String] -> IO ()
-makeVersionDirectories config = sequence_ (createDirectory <$> ("build/" ++) <$> (! "key") <$> config)
 
 doStatic :: [HashMap String String] -> IO ()
 doStatic configuration = do
@@ -54,7 +51,7 @@ doStatic configuration = do
 copyStaticForBuild :: String -> IO ()
 copyStaticForBuild build = do
   dir <- getDirectory "static"
-  copyTo_ ("build/" ++ build ++ "/static") dir
+  copyTo_ "build/static" dir
   return ()
 
 doHtmlFile :: [HashMap String String] -> String -> IO ()
@@ -67,7 +64,7 @@ doHtmlFile configuration htmlFile =
 constructVersion :: IOSArrow XmlTree XmlTree -> String -> HashMap String String -> IOSArrow XmlTree XmlTree
 constructVersion doc filename version = traceMsg 1 ("Trying to process " ++ version ! "key")
   >>> foldl (>>>) doc (processTopDown <$> changesForVersion version)
-  >>> writeDocument [withOutputHTML] ("build/" ++ (version ! "key") ++ "/" ++ filename)
+  >>> writeDocument [withOutputHTML] ("build/" ++ (version ! "key") ++ ".html")
   >>> traceMsg 1 ("Wrote " ++ (version ! "key"))
 
 updateVersionWithKey :: HashMap String String -> String -> IOSArrow XmlTree XmlTree

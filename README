@@ -8,10 +8,10 @@ This is just a toy project to play with HXT and build something (marginally) use
 ```
 git clone git@github.com:AndrewBallinger/versionopolis
 cabal install
-versionopolis <configuration.yaml> <target.html>
+versionopolis <configuration.yaml>
 ```
 
-This will read a yaml configuration and produce different versions of the html copying over anything in a static directory.
+This will read a yaml configuration and produce different versions of an index.html copying over anything in a static directory.
 Right now... The yaml configuration needs to contain a list of objects, where each object consists of a "key" string and then one or more string string pairs. Any html elements with ids equal to the first string will be replaced with the second string.
 
 ## Example
@@ -31,7 +31,7 @@ versions.yaml :
 
 running :
 ```
-versionopolis versions.yaml index.html
+versionopolis versions.yaml
 ```
 
-Inside the build directory there will be a "Version A" and a "Version B" where the index.html in "Version B" has been changed and the static files have been copied over.
+Inside the build directory there will be a "Version A.html" and a "Version B.html" where "Version B" has been changed and the static files have been copied over.
