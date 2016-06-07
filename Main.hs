@@ -3,13 +3,11 @@
 
 import Prelude
 import GHC.Generics
-import Control.Arrow (left, right, first)
-import Control.Monad
+import Control.Monad (when)
 import System.Environment (getArgs)
 import System.Directory (removeDirectoryRecursive, createDirectory, doesDirectoryExist)
 import System.File.Tree (getDirectory, copyTo_)
 import Data.HashMap.Strict (HashMap, keys, (!))
-import Data.Text (Text)
 import Data.Yaml as Y
 
 import Text.XML.HXT.Core 
@@ -37,7 +35,7 @@ main = do
          makeVersionDirectories c >> do
            putStrLn ("Building html files")
            doHtmlFile c htmlArg
-           putStrLn ("Building css files")
+           putStrLn ("Building static files")
            doStatic c
            return ()
 
